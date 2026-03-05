@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deal Lab</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      color: #1a1a1a;
+    }
+    .container {
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #666;
+      font-size: 1rem;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+    .search-card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-family: inherit;
+      text-align: center;
+      letter-spacing: 0.1em;
+      transition: border-color 0.15s;
+      margin-bottom: 12px;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    input[type="text"]::placeholder {
+      letter-spacing: normal;
+      color: #bbb;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .submit-btn:hover { background: #1d4ed8; }
+    .submit-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+    .hint {
+      font-size: 0.8rem;
+      color: #999;
+      margin-top: 8px;
+    }
+    .status {
+      padding: 20px 0 8px;
+      color: #555;
+      font-size: 0.95rem;
+      display: none;
+    }
+    .status.active { display: block; }
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 3px solid #ddd;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Deal Lab</h1>
+    <p class="subtitle" id="subtitle">Finding deals near you...</p>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <div class="search-card">
+      <form method="POST" action="/search" id="search-form" style="display: none;">
+        <input type="text" name="zip_code" id="zip-input" placeholder="e.g. 94601" maxlength="5" pattern="[0-9]{5}" required autofocus>
+        <button type="submit" class="submit-btn" id="submit-btn">Find Deals</button>
+        <p class="hint">Pulls active listings from Redfin and scores them with AI</p>
+      </form>
+
+      <div class="status active" id="detect-status">
+        <span class="spinner"></span>
+        Detecting your location...
+      </div>
+
+      <div class="status" id="loading-status">
+        <span class="spinner"></span>
+        <span id="loading-text">Pulling listings and running analysis...</span><br>
+        <span style="font-size: 0.8rem; color: #999;">This takes about 30-60 seconds</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var form = document.getElementById('search-form');
+    var zipInput = document.getElementById('zip-input');
+    var detectStatus = document.getElementById('detect-status');
+    var loadingStatus = document.getElementById('loading-status');
+    var subtitle = document.getElementById('subtitle');
+    var submitBtn = document.getElementById('submit-btn');
+
+    function showForm(zip) {
+      detectStatus.classList.remove('active');
+      form.style.display = 'block';
+      if (zip) {
+        zipInput.value = zip;
+      }
+      subtitle.textContent = 'Pull live listings and score every deal';
+    }
+
+    function autoSubmit(zip) {
+      zipInput.value = zip;
+      subtitle.textContent = 'Found you in ' + zip;
+      detectStatus.classList.remove('active');
+      loadingStatus.classList.add('active');
+      form.style.display = 'none';
+      // Small delay so the user sees what happened
+      setTimeout(function() {
+        form.submit();
+      }, 500);
+    }
+
+    // Manual submit handler
+    form.addEventListener('submit', function() {
+      submitBtn.disabled = true;
+      submitBtn.style.display = 'none';
+      loadingStatus.classList.add('active');
+    });
+
+    // Auto-detect location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          // Got location — reverse geocode to get zip
+          var url = 'https://nominatim.openstreetmap.org/reverse?lat=' +
+            pos.coords.latitude + '&lon=' + pos.coords.longitude +
+            '&format=json&zoom=18';
+
+          fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              var zip = data.address && data.address.postcode;
+              if (zip && /^\d{5}/.test(zip)) {
+                zip = zip.substring(0, 5);
+                autoSubmit(zip);
+              } else {
+                showForm();
+              }
+            })
+            .catch(function() { showForm(); });
+        },
+        function() {
+          // Location denied or error — show manual form
+          showForm();
+        },
+        { timeout: 5000 }
+      );
+    } else {
+      showForm();
+    }
+
+    {% if error %}
+    // If we're showing an error, make sure the form is visible
+    showForm();
+    {% endif %}
+  </script>
+</body>
+</html>
