@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, abort
 
-from redfin_api import fetch_listings
+from listing_api import fetch_listings
 from scorer import score_listings
 from report import generate_report_html
 from db import init_db, save_dashboard, get_dashboard
