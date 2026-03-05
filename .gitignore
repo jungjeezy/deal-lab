@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+.env
+scored_listings.csv
+deal_report.html
+*.db
+.DS_Store
