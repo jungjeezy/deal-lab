@@ -14,6 +14,7 @@ from db import init_db, save_dashboard, get_dashboard
 load_dotenv()
 
 app = Flask(__name__)
+init_db()
 
 
 @app.route("/")
@@ -30,21 +31,29 @@ def search():
             "form.html", error="Please enter a valid 5-digit zip code."
         )
 
-    # Pull listings from Redfin
-    listings = fetch_listings(zip_code, max_listings=10)
-    if not listings:
+    try:
+        # Pull listings from Redfin
+        listings = fetch_listings(zip_code, max_listings=10)
+        if not listings:
+            return render_template(
+                "form.html",
+                error=f"No active listings found in {zip_code}. Try a different zip code.",
+            )
+
+        # Score them all
+        results = score_listings(listings)
+
+        # Save to database
+        dashboard_id = save_dashboard(zip_code, results)
+
+        return redirect(url_for("view_dashboard", dashboard_id=dashboard_id))
+
+    except Exception as e:
+        print(f"Error during search: {e}")
         return render_template(
             "form.html",
-            error=f"No active listings found in {zip_code}. Try a different zip code.",
+            error="Something went wrong pulling listings. Please try again in a moment.",
         )
-
-    # Score them all
-    results = score_listings(listings)
-
-    # Save to database
-    dashboard_id = save_dashboard(zip_code, results)
-
-    return redirect(url_for("view_dashboard", dashboard_id=dashboard_id))
 
 
 @app.route("/report/<dashboard_id>")
