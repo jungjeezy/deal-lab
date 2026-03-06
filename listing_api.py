@@ -100,6 +100,23 @@ def _fetch_via_rapidapi(zip_code: str, max_listings: int = 20) -> List[Listing]:
             if price and sqft and sqft > 0:
                 ppsf = round(price / sqft, 2)
 
+            # Photos
+            primary_photo_url = None
+            pp = prop.get("primary_photo") or {}
+            if pp:
+                primary_photo_url = pp.get("href")
+
+            photo_urls = []
+            for photo in (prop.get("photos") or [])[:6]:
+                href = photo.get("href")
+                if href:
+                    photo_urls.append(href)
+
+            # Coordinates
+            coord = loc.get("address", {}).get("coordinate", {}) if loc else {}
+            latitude = safe_float(coord.get("lat"))
+            longitude = safe_float(coord.get("lon"))
+
             listings.append(
                 Listing(
                     address=address.strip(),
@@ -119,6 +136,10 @@ def _fetch_via_rapidapi(zip_code: str, max_listings: int = 20) -> List[Listing]:
                     state=state,
                     zip_code=postal or zip_code,
                     source="realtor",
+                    photo_urls=photo_urls,
+                    primary_photo_url=primary_photo_url,
+                    latitude=latitude,
+                    longitude=longitude,
                 )
             )
         except Exception as e:
