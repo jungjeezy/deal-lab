@@ -23,39 +23,6 @@ def index():
     return render_template("form.html", error=None)
 
 
-@app.route("/debug")
-def debug():
-    """Temp debug endpoint to check what's happening."""
-    import json
-    info = {
-        "rapidapi_key_set": bool(os.environ.get("RAPIDAPI_KEY")),
-        "openai_key_set": bool(os.environ.get("OPENAI_API_KEY")),
-    }
-    # Test both possible hosts
-    import httpx
-    for host in ["realty-in-us.p.rapidapi.com", "realtor.p.rapidapi.com"]:
-        try:
-            resp = httpx.get(
-                f"https://{host}/properties/v2/list-for-sale",
-                params={"postal_code": "94601", "limit": "2", "offset": "0", "sort": "relevance"},
-                headers={
-                    "x-rapidapi-key": os.environ.get("RAPIDAPI_KEY", ""),
-                    "x-rapidapi-host": host,
-                },
-                timeout=15,
-            )
-            data = resp.json()
-            info[host] = {
-                "status": resp.status_code,
-                "keys": list(data.keys()),
-                "preview": resp.text[:300],
-            }
-        except Exception as e:
-            info[host] = {"error": str(e)}
-
-    return f"<pre>{json.dumps(info, indent=2)}</pre>"
-
-
 @app.route("/search", methods=["POST"])
 def search():
     zip_code = request.form.get("zip_code", "").strip()
@@ -71,7 +38,7 @@ def search():
         if not listings:
             return render_template(
                 "form.html",
-                error=f"No active listings found in {zip_code}. Try a different zip code.",
+                error=f"No active listings found in {zip_code}. Try a different zip or pick a market below.",
             )
 
         # Score them all
@@ -86,7 +53,7 @@ def search():
         traceback.print_exc()
         return render_template(
             "form.html",
-            error="Something went wrong pulling listings. Please try again in a moment.",
+            error="Something went wrong pulling listings. Please try again or pick a market below.",
         )
 
 
