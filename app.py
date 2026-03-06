@@ -31,13 +31,29 @@ def debug():
         "rapidapi_key_set": bool(os.environ.get("RAPIDAPI_KEY")),
         "openai_key_set": bool(os.environ.get("OPENAI_API_KEY")),
     }
-    # Quick test of RapidAPI
+    # Quick test of RapidAPI - show raw response
     try:
-        from listing_api import _fetch_via_rapidapi
-        listings = _fetch_via_rapidapi("94601", max_listings=1)
-        info["rapidapi_listings"] = len(listings)
-        if listings:
-            info["first_listing"] = listings[0].address
+        import httpx
+        resp = httpx.get(
+            "https://realtor.p.rapidapi.com/properties/v2/list-for-sale",
+            params={"postal_code": "94601", "limit": "2", "offset": "0", "sort": "relevance"},
+            headers={
+                "x-rapidapi-key": os.environ.get("RAPIDAPI_KEY", ""),
+                "x-rapidapi-host": "realtor.p.rapidapi.com",
+            },
+            timeout=15,
+        )
+        info["api_status"] = resp.status_code
+        data = resp.json()
+        info["api_keys"] = list(data.keys())
+        # Show first property structure if any
+        props = data.get("properties", [])
+        info["property_count"] = len(props)
+        if props:
+            info["first_property_keys"] = list(props[0].keys())
+        else:
+            # Show first 500 chars of response
+            info["api_response_preview"] = resp.text[:500]
     except Exception as e:
         info["rapidapi_error"] = str(e)
 
