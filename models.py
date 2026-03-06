@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 
 @dataclass
@@ -22,6 +22,11 @@ class Listing:
     state: Optional[str] = None
     zip_code: Optional[str] = None
     source: str = "manual"
+    # Photo + geo fields
+    photo_urls: List[str] = field(default_factory=list)
+    primary_photo_url: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 
 def safe_float(x: str) -> Optional[float]:
