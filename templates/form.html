@@ -8,47 +8,40 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #F9F5F0;
       min-height: 100vh;
       padding: 16px;
-      color: #f0f0f5;
-      -webkit-font-smoothing: antialiased;
+      color: #3D3929;
     }
 
     .page {
-      max-width: 600px;
+      max-width: 540px;
       margin: 0 auto;
-      padding-top: 60px;
+      padding-top: 56px;
     }
 
     .hero {
       text-align: center;
-      margin-bottom: 36px;
+      margin-bottom: 32px;
     }
     .hero h1 {
-      font-size: 2.5rem;
+      font-size: 2rem;
       font-weight: 700;
-      letter-spacing: -0.03em;
-      background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: #2C2516;
+      margin-bottom: 6px;
     }
     .hero p {
-      color: rgba(255,255,255,0.5);
+      color: #9C8E7C;
       font-size: 1rem;
-      line-height: 1.5;
     }
 
     .search-card {
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.12);
+      background: #fff;
       border-radius: 20px;
       padding: 24px;
+      box-shadow: 0 1px 3px rgba(60,40,10,0.04), 0 8px 24px rgba(60,40,10,0.06);
       margin-bottom: 36px;
     }
     .search-row {
@@ -58,50 +51,51 @@
     .search-row input {
       flex: 1;
       padding: 14px 16px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
+      background: #FAF7F3;
+      border: 1.5px solid #E8E0D5;
       border-radius: 14px;
       font-size: 1.1rem;
       font-family: inherit;
       text-align: center;
       letter-spacing: 0.1em;
-      color: #fff;
-      transition: border-color 0.2s;
+      color: #2C2516;
+      transition: border-color 0.2s, background 0.2s;
     }
     .search-row input:focus {
       outline: none;
-      border-color: rgba(165,180,252,0.6);
+      border-color: #D4A574;
+      background: #fff;
     }
     .search-row input::placeholder {
       letter-spacing: normal;
-      color: rgba(255,255,255,0.3);
+      color: #BEB3A4;
     }
     .search-row button {
       padding: 14px 28px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: #D4A574;
       color: white;
       border: none;
       border-radius: 14px;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: background 0.15s;
       white-space: nowrap;
       font-family: inherit;
     }
-    .search-row button:hover { opacity: 0.9; }
-    .search-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .search-row button:hover { background: #C4946A; }
+    .search-row button:disabled { background: #CBBFB0; cursor: not-allowed; }
     .hint {
-      font-size: 0.78rem;
-      color: rgba(255,255,255,0.35);
+      font-size: 0.8rem;
+      color: #B5A898;
       margin-top: 10px;
       text-align: center;
     }
 
     .error {
-      background: rgba(248,113,113,0.15);
-      border: 1px solid rgba(248,113,113,0.3);
-      color: #fca5a5;
+      background: #FEF2F0;
+      border: 1px solid #F5D0CA;
+      color: #A33D2A;
       padding: 12px 16px;
       border-radius: 14px;
       margin-bottom: 16px;
@@ -111,7 +105,7 @@
 
     .status {
       padding: 16px 0 4px;
-      color: rgba(255,255,255,0.6);
+      color: #9C8E7C;
       font-size: 0.95rem;
       display: none;
       text-align: center;
@@ -119,24 +113,24 @@
     .status.active { display: block; }
     .spinner {
       display: inline-block;
-      width: 18px;
-      height: 18px;
-      border: 3px solid rgba(255,255,255,0.15);
-      border-top-color: #a5b4fc;
+      width: 16px;
+      height: 16px;
+      border: 2.5px solid #E8E0D5;
+      border-top-color: #D4A574;
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin 0.7s linear infinite;
       vertical-align: middle;
       margin-right: 8px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .section-label {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: rgba(255,255,255,0.35);
-      margin-bottom: 14px;
+      color: #B5A898;
+      margin-bottom: 12px;
     }
     .markets {
       display: grid;
@@ -145,30 +139,30 @@
     }
     .market-btn {
       display: block;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 14px;
+      background: #fff;
+      border: 1.5px solid #EDE7DE;
+      border-radius: 16px;
       padding: 16px;
       text-align: left;
       cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
       text-decoration: none;
       color: inherit;
     }
     .market-btn:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: rgba(165,180,252,0.4);
+      border-color: #D4A574;
+      box-shadow: 0 2px 12px rgba(60,40,10,0.06);
       transform: translateY(-1px);
     }
     .market-name {
       font-weight: 600;
       font-size: 0.95rem;
-      color: #fff;
+      color: #2C2516;
       margin-bottom: 2px;
     }
     .market-zip {
-      font-size: 0.72rem;
-      color: rgba(255,255,255,0.35);
+      font-size: 0.75rem;
+      color: #B5A898;
     }
 
     @media (min-width: 480px) {
@@ -198,7 +192,7 @@
       <div class="status" id="loading-status">
         <span class="spinner"></span>
         <span>Analyzing listings...</span><br>
-        <span style="font-size: 0.78rem; color: rgba(255,255,255,0.3);">Usually takes 10-20 seconds</span>
+        <span style="font-size: 0.78rem; color: #B5A898;">Usually takes 10-20 seconds</span>
       </div>
     </div>
 
