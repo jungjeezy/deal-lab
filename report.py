@@ -10,35 +10,45 @@ HTML_TEMPLATE = """\
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Deal Lab Report</title>
+  <title>Deal Lab</title>
   <style>
     * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+
     body {{
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f0f2f5;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      min-height: 100vh;
       padding: 16px;
-      color: #1a1a1a;
+      color: #f0f0f5;
+      -webkit-font-smoothing: antialiased;
     }}
+
     .header {{
       text-align: center;
       margin-bottom: 24px;
-      padding: 20px 0;
+      padding: 24px 0 16px;
     }}
     .header h1 {{
-      font-size: 1.5rem;
+      font-size: 1.75rem;
       font-weight: 700;
-      margin-bottom: 4px;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }}
     .header p {{
-      color: #666;
-      font-size: 0.875rem;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+      margin-top: 4px;
     }}
+
     .zip-bar {{
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }}
     .zip-bar form {{
       display: flex;
@@ -48,244 +58,268 @@ HTML_TEMPLATE = """\
     .zip-bar input {{
       width: 80px;
       padding: 8px 10px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
       font-size: 0.9rem;
       font-family: inherit;
       text-align: center;
       letter-spacing: 0.1em;
+      color: #fff;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }}
     .zip-bar input:focus {{
       outline: none;
-      border-color: #2563eb;
+      border-color: rgba(165,180,252,0.6);
     }}
     .zip-bar button {{
-      padding: 8px 14px;
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.85rem;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: background 0.2s;
     }}
-    .zip-bar button:hover {{ background: #1d4ed8; }}
+    .zip-bar button:hover {{ background: rgba(255,255,255,0.25); }}
     .zip-bar span {{
-      color: #888;
+      color: rgba(255,255,255,0.5);
       font-size: 0.85rem;
     }}
+
     .card {{
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 20px;
       margin-bottom: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      border-left: 5px solid var(--score-color);
+      transition: transform 0.2s, box-shadow 0.2s;
     }}
+    .card:hover {{
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }}
+
     .card-top {{
       display: flex;
       align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 14px;
+      margin-bottom: 16px;
     }}
-    .score-area {{
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .score-ring {{
+      position: relative;
+      width: 56px;
+      height: 56px;
       flex-shrink: 0;
-      min-width: 56px;
     }}
-    .score-badge {{
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+    .score-ring svg {{
+      width: 56px;
+      height: 56px;
+      transform: rotate(-90deg);
+    }}
+    .score-ring .bg {{
+      fill: none;
+      stroke: rgba(255,255,255,0.1);
+      stroke-width: 4;
+    }}
+    .score-ring .fg {{
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: var(--dash);
+      stroke-dashoffset: var(--offset);
+      transition: stroke-dashoffset 0.6s ease;
+    }}
+    .score-num {{
+      position: absolute;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
+      font-size: 1.1rem;
       font-weight: 700;
-      font-size: 1.25rem;
-      background: var(--score-color);
+      color: var(--accent);
     }}
-    .score-label {{
+    .score-tag {{
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
       font-size: 0.65rem;
-      font-weight: 600;
-      color: var(--score-color);
-      margin-top: 4px;
-      text-align: center;
+      font-weight: 700;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      background: var(--accent-bg);
+      color: var(--accent);
+      margin-top: 6px;
     }}
-    .card-title {{
-      flex: 1;
-    }}
-    .card-title h2 {{
+
+    .card-info {{ flex: 1; }}
+    .card-info h2 {{
       font-size: 1rem;
       font-weight: 600;
       line-height: 1.3;
+      color: #fff;
     }}
-    .card-title .price {{
-      font-size: 1.1rem;
+    .card-info .price {{
+      font-size: 1.2rem;
       font-weight: 700;
-      color: #111;
+      color: #fff;
       margin-top: 2px;
     }}
-    .card-title .meta {{
-      font-size: 0.8rem;
-      color: #888;
-      margin-top: 2px;
+    .card-info .meta {{
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.45);
+      margin-top: 3px;
     }}
-    .metrics {{
+
+    .pitch {{
+      background: rgba(165,180,252,0.1);
+      border: 1px solid rgba(165,180,252,0.2);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.85);
+      font-style: italic;
+    }}
+
+    .stats {{
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 16px;
     }}
-    .metric {{
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 10px;
+    .stat {{
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px;
     }}
-    .metric-label {{
-      font-size: 0.7rem;
+    .stat-label {{
+      font-size: 0.65rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #888;
-      margin-bottom: 2px;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 4px;
     }}
-    .metric-value {{
-      font-size: 0.9rem;
+    .stat-value {{
+      font-size: 0.95rem;
       font-weight: 600;
+      color: #fff;
     }}
-    .metric-hint {{
+    .stat-hint {{
       font-size: 0.7rem;
-      color: #aaa;
+      color: rgba(255,255,255,0.35);
       margin-top: 2px;
     }}
-    .tag {{
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
+
+    .verdict-under {{ color: #4ade80; }}
+    .verdict-fair {{ color: #facc15; }}
+    .verdict-over {{ color: #f87171; }}
+
+    .pills {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
     }}
-    .tag-good {{ background: #dcfce7; color: #166534; }}
-    .tag-ok {{ background: #fef9c3; color: #854d0e; }}
-    .tag-bad {{ background: #fee2e2; color: #991b1b; }}
-    .tag-light {{ background: #dbeafe; color: #1e40af; }}
-    .tag-medium {{ background: #fef9c3; color: #854d0e; }}
-    .tag-heavy {{ background: #fee2e2; color: #991b1b; }}
-    .tag-unknown {{ background: #f3f4f6; color: #6b7280; }}
+    .pill {{
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: rgba(74,222,128,0.12);
+      color: #4ade80;
+      border: 1px solid rgba(74,222,128,0.2);
+    }}
+    .pill-warn {{
+      background: rgba(251,191,36,0.1);
+      color: #fbbf24;
+      border-color: rgba(251,191,36,0.2);
+    }}
+
     .detail-toggle {{
-      background: none;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 10px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 11px 16px;
       width: 100%;
       cursor: pointer;
-      font-size: 0.875rem;
-      color: #555;
-      transition: background 0.15s;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      font-family: inherit;
+      transition: background 0.2s;
     }}
-    .detail-toggle:hover {{ background: #f8f9fa; }}
+    .detail-toggle:hover {{ background: rgba(255,255,255,0.1); }}
+
     .details {{
       overflow: hidden;
       max-height: 0;
-      transition: max-height 0.3s ease;
+      transition: max-height 0.35s ease;
       margin-top: 0;
     }}
     .details.open {{
       max-height: 2000px;
-      margin-top: 12px;
+      margin-top: 14px;
     }}
-    .details-inner {{
-      padding-top: 4px;
-    }}
+    .details-inner {{ padding-top: 2px; }}
+
     .detail-section {{
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }}
     .detail-section h3 {{
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #888;
-      margin-bottom: 6px;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 8px;
     }}
-    .detail-section p, .detail-section li {{
+    .detail-section p {{
       font-size: 0.875rem;
-      line-height: 1.5;
-      color: #333;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.75);
     }}
     .detail-section ul {{
       list-style: none;
       padding: 0;
     }}
     .detail-section ul li {{
+      font-size: 0.85rem;
       padding: 4px 0;
+      color: rgba(255,255,255,0.7);
     }}
-    .detail-section ul li::before {{
-      content: "\\26A0\\FE0F  ";
-    }}
-    .profit-row {{
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: flex-start;
-      font-size: 0.875rem;
-      line-height: 1.4;
-    }}
-    .profit-row strong {{
-      white-space: nowrap;
-    }}
+
     .listing-link {{
       display: inline-block;
       margin-top: 8px;
-      color: #2563eb;
+      color: #a5b4fc;
       text-decoration: none;
       font-size: 0.85rem;
       font-weight: 500;
+      transition: color 0.15s;
     }}
-    .listing-link:hover {{ text-decoration: underline; }}
-    .money-in {{
-      background: #f8f9fa;
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 12px;
-      display: flex;
-      gap: 12px;
-    }}
-    .money-in-block {{
-      flex: 1;
-    }}
-    .money-in-label {{
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #888;
-      margin-bottom: 2px;
-    }}
-    .money-in-value {{
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #111;
-    }}
-    .money-in-hint {{
-      font-size: 0.7rem;
-      color: #aaa;
-      margin-top: 2px;
-    }}
-    .money-in-value.upside {{ color: #16a34a; }}
-    .money-in-value.downside {{ color: #dc2626; }}
+    .listing-link:hover {{ color: #c7d2fe; }}
+
     @media (min-width: 768px) {{
       body {{ max-width: 800px; margin: 0 auto; }}
-      .metrics {{ grid-template-columns: 1fr 1fr 1fr 1fr; }}
+      .stats {{ grid-template-columns: 1fr 1fr 1fr; }}
     }}
   </style>
 </head>
 <body>
   <div class="header">
     <h1>Deal Lab</h1>
-    <p>{deal_count} deal{deal_plural} &middot; {generated_date}</p>
+    <p>{deal_count} listing{deal_plural} &middot; {generated_date}</p>
   </div>
   {zip_bar_html}
   {cards_html}
@@ -294,7 +328,7 @@ HTML_TEMPLATE = """\
       btn.addEventListener('click', function() {{
         var details = btn.nextElementSibling;
         details.classList.toggle('open');
-        btn.textContent = details.classList.contains('open') ? 'Hide Details' : 'See the full breakdown';
+        btn.textContent = details.classList.contains('open') ? 'Less' : 'Full breakdown';
       }});
     }});
   </script>
@@ -303,32 +337,24 @@ HTML_TEMPLATE = """\
 """
 
 
-def _score_color(score: float) -> str:
-    if score >= 7:
-        return "#22c55e"
-    elif score >= 4:
-        return "#f59e0b"
-    return "#ef4444"
-
-
-def _score_label(score: float) -> str:
+def _accent_color(score: float) -> str:
     if score >= 8:
-        return "Great Deal"
+        return "#4ade80"
     elif score >= 6:
-        return "Worth a Look"
+        return "#a5b4fc"
     elif score >= 4:
-        return "Decent"
-    return "Risky"
+        return "#facc15"
+    return "#f87171"
 
 
-_FIT_LABELS = {"good": "Good fit", "ok": "Maybe", "bad": "Tough"}
-
-_WORK_LABELS = {
-    "light": "Light touch",
-    "medium": "Moderate",
-    "heavy": "Major project",
-    "unknown": "Hard to tell",
-}
+def _accent_bg(score: float) -> str:
+    if score >= 8:
+        return "rgba(74,222,128,0.15)"
+    elif score >= 6:
+        return "rgba(165,180,252,0.15)"
+    elif score >= 4:
+        return "rgba(250,204,21,0.15)"
+    return "rgba(248,113,113,0.15)"
 
 
 def _fmt_price(val: float) -> str:
@@ -343,57 +369,60 @@ def _esc(text: str) -> str:
     return html.escape(str(text))
 
 
+def _score_ring(score: float, accent: str) -> str:
+    """SVG circular progress ring for the score."""
+    circumference = 2 * 3.14159 * 22  # radius = 22
+    dash = circumference
+    offset = circumference - (score / 10) * circumference
+    return f"""\
+    <div class="score-ring" style="--accent: {accent}; --dash: {dash:.1f}; --offset: {offset:.1f}">
+      <svg viewBox="0 0 48 48">
+        <circle class="bg" cx="24" cy="24" r="22"/>
+        <circle class="fg" cx="24" cy="24" r="22"/>
+      </svg>
+      <div class="score-num">{score:.0f}</div>
+    </div>"""
+
+
 def _render_card(
     listing: Listing, analysis: Dict[str, Any], rank: int
 ) -> str:
-    score = analysis["deal_score_1_to_10"]
-    color = _score_color(score)
-    label = _score_label(score)
-    arv = analysis["arv_estimate"]
-    rehab = analysis["rehab_cost_estimate"]
-    mao = analysis["mao_estimate"]
-    exits = analysis["exit_strategies"]
+    score = analysis["score"]
+    accent = _accent_color(score)
+    accent_bg = _accent_bg(score)
+    label = analysis["score_label"]
+    price_info = analysis["price_assessment"]
+    monthly = analysis["estimated_monthly"]
 
-    # Build meta line
+    # Meta line
     meta_parts = []
     if listing.beds is not None:
-        meta_parts.append(f"{listing.beds:.0f} bed")
+        meta_parts.append(f"{listing.beds:.0f} bd")
     if listing.baths is not None:
-        meta_parts.append(f"{listing.baths:.0f} bath")
+        meta_parts.append(f"{listing.baths:.0f} ba")
     if listing.sqft is not None:
         meta_parts.append(f"{listing.sqft:,.0f} sqft")
     if listing.year_built:
         meta_parts.append(f"Built {listing.year_built}")
-    if listing.days_on_market is not None:
-        meta_parts.append(f"{listing.days_on_market} days listed")
     meta_line = " &middot; ".join(meta_parts)
 
-    # Exit strategy labels
-    flip_fit = exits["flip"]["fit"]
-    rental_fit = exits["rental"]["fit"]
-    rent = exits["rental"]["rough_rent_monthly"]
+    # Price verdict
+    verdict = price_info["verdict"]
+    verdict_class = f"verdict-{verdict}"
+    verdict_labels = {"under": "Under market", "fair": "Fair price", "over": "Over market"}
+    ev = price_info["estimated_value"]
 
-    flip_label = _FIT_LABELS.get(flip_fit, flip_fit.title())
-    rental_label = _FIT_LABELS.get(rental_fit, rental_fit.title())
-
-    # Work level
-    rehab_tier = analysis["rehab_tier"]
-    work_label = _WORK_LABELS.get(rehab_tier, rehab_tier.title())
-
-    # Total money in = asking price + rehab
-    total_in_low = listing.price + rehab["low"]
-    total_in_high = listing.price + rehab["high"]
-    # Potential upside = ARV - total money in (use conservative: high cost, low ARV)
-    upside_low = arv["low"] - total_in_high
-    upside_high = arv["high"] - total_in_low
-    upside_positive = upside_low > 0
-
-    # Risks
-    risks_html = "".join(
-        f"<li>{_esc(r)}</li>" for r in analysis["top_risks"]
+    # Buyer appeal pills
+    appeal_html = "".join(
+        f'<span class="pill">{_esc(item)}</span>' for item in analysis["buyer_appeal"]
     )
 
-    # Listing link
+    # Watch out pills
+    watch_html = "".join(
+        f'<span class="pill pill-warn">{_esc(item)}</span>' for item in analysis["watch_out"]
+    )
+
+    # Link
     link_html = ""
     if listing.link and listing.link != "https://example.com":
         link_html = (
@@ -402,78 +431,52 @@ def _render_card(
         )
 
     return f"""\
-  <div class="card" style="--score-color: {color}">
+  <div class="card" style="--accent: {accent}; --accent-bg: {accent_bg}">
     <div class="card-top">
-      <div class="score-area">
-        <div class="score-badge">{score}</div>
-        <div class="score-label">{label}</div>
-      </div>
-      <div class="card-title">
-        <h2>#{rank} &mdash; {_esc(listing.address)}, {_esc(listing.city)}</h2>
-        <div class="price">Asking {_fmt_price(listing.price)}</div>
+      {_score_ring(score, accent)}
+      <div class="card-info">
+        <h2>{_esc(listing.address)}, {_esc(listing.city)}</h2>
+        <div class="price">{_fmt_price(listing.price)}</div>
         <div class="meta">{meta_line}</div>
+        <span class="score-tag">{_esc(label)}</span>
       </div>
     </div>
-    <div class="money-in">
-      <div class="money-in-block">
-        <div class="money-in-label">Total money in</div>
-        <div class="money-in-value">{_fmt_price(total_in_low)} &ndash; {_fmt_price(total_in_high)}</div>
-        <div class="money-in-hint">Purchase + renovation</div>
+
+    <div class="pitch">&ldquo;{_esc(analysis["client_pitch"])}&rdquo;</div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Price Check</div>
+        <div class="stat-value {verdict_class}">{verdict_labels.get(verdict, verdict.title())}</div>
+        <div class="stat-hint">Worth {_fmt_price(ev["low"])} &ndash; {_fmt_price(ev["high"])}</div>
       </div>
-      <div class="money-in-block">
-        <div class="money-in-label">Potential upside</div>
-        <div class="money-in-value {"upside" if upside_positive else "downside"}">{_fmt_price(abs(upside_low))} &ndash; {_fmt_price(abs(upside_high))}{" profit" if upside_positive else " loss"}</div>
-        <div class="money-in-hint">{"What you could make" if upside_positive else "You'd likely lose money"}</div>
-      </div>
-    </div>
-    <div class="metrics">
-      <div class="metric">
-        <div class="metric-label">What it could be worth</div>
-        <div class="metric-value">{_fmt_price(arv["low"])} &ndash; {_fmt_price(arv["high"])}</div>
-        <div class="metric-hint">After fixing it up</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Renovation costs</div>
-        <div class="metric-value">{_fmt_price(rehab["low"])} &ndash; {_fmt_price(rehab["high"])}</div>
-        <div class="metric-hint">To get it market-ready</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Max you should offer</div>
-        <div class="metric-value">{_fmt_price(mao["low"])} &ndash; {_fmt_price(mao["high"])}</div>
-        <div class="metric-hint">{_esc(mao["method"])}</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">How much work</div>
-        <div class="metric-value"><span class="tag tag-{rehab_tier}">{work_label}</span></div>
+      <div class="stat">
+        <div class="stat-label">Est. Monthly</div>
+        <div class="stat-value">{_fmt_price(monthly["total"])}/mo</div>
+        <div class="stat-hint">Mortgage + taxes + ins</div>
       </div>
     </div>
-    <button class="detail-toggle">See the full breakdown</button>
+
+    <div class="pills">{appeal_html}</div>
+
+    <button class="detail-toggle">Full breakdown</button>
     <div class="details">
       <div class="details-inner">
         <div class="detail-section">
-          <h3>Ways to profit</h3>
-          <div class="profit-row">
-            <strong>Fix &amp; sell:</strong>
-            <span class="tag tag-{flip_fit}">{flip_label}</span>
-            <span>{_esc(exits["flip"]["notes"])}</span>
-          </div>
-          <div class="profit-row">
-            <strong>Rent it out:</strong>
-            <span class="tag tag-{rental_fit}">{rental_label}</span>
-            <span>{_esc(exits["rental"]["notes"])}</span>
-          </div>
-          <div class="profit-row">
-            <strong>Expected rent:</strong>
-            <span>{_fmt_price(rent["low"])} &ndash; {_fmt_price(rent["high"])}/mo</span>
-          </div>
+          <h3>Watch for</h3>
+          <div class="pills">{watch_html}</div>
         </div>
         <div class="detail-section">
-          <h3>Watch out for</h3>
-          <ul>{risks_html}</ul>
+          <h3>Negotiation Tip</h3>
+          <p>{_esc(analysis["negotiation_insight"])}</p>
         </div>
         <div class="detail-section">
-          <h3>The bottom line</h3>
-          <p>{_esc(analysis["one_paragraph_rationale"])}</p>
+          <h3>Price Analysis</h3>
+          <p>{_esc(price_info["explanation"])}</p>
+        </div>
+        <div class="detail-section">
+          <h3>The Bottom Line</h3>
+          <p>{_esc(analysis["bottom_line"])}</p>
         </div>
         {link_html}
       </div>
@@ -502,7 +505,7 @@ def _build_page_html(
 ) -> str:
     """Build the full HTML page as a string."""
     sorted_results = sorted(
-        results, key=lambda r: r[1]["deal_score_1_to_10"], reverse=True
+        results, key=lambda r: r[1]["score"], reverse=True
     )
 
     cards = []
