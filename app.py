@@ -2,6 +2,7 @@
 """Deal Lab — Web app for scoring real estate deals."""
 
 import os
+import traceback
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, abort
@@ -32,8 +33,8 @@ def search():
         )
 
     try:
-        # Pull listings from Redfin
-        listings = fetch_listings(zip_code, max_listings=10)
+        # Pull listings
+        listings = fetch_listings(zip_code, max_listings=5)
         if not listings:
             return render_template(
                 "form.html",
@@ -49,7 +50,7 @@ def search():
         return redirect(url_for("view_dashboard", dashboard_id=dashboard_id))
 
     except Exception as e:
-        print(f"Error during search: {e}")
+        traceback.print_exc()
         return render_template(
             "form.html",
             error="Something went wrong pulling listings. Please try again in a moment.",
