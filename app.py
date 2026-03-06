@@ -81,6 +81,27 @@ def debug():
     }
 
 
+@app.route("/debug/fetch/<zip_code>")
+def debug_fetch(zip_code):
+    """Test listing fetch without scoring."""
+    try:
+        listings = fetch_listings(zip_code, max_listings=3)
+        return {
+            "count": len(listings),
+            "listings": [
+                {
+                    "address": l.address,
+                    "price": l.price,
+                    "photos": len(l.photo_urls),
+                    "has_coords": bool(l.latitude),
+                }
+                for l in listings
+            ],
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, port=8000)
