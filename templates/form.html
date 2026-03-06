@@ -10,36 +10,41 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #f0f2f5;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       padding: 16px;
       color: #1a1a1a;
     }
-    .container {
-      max-width: 440px;
-      width: 100%;
-      text-align: center;
+    .page {
+      max-width: 600px;
+      margin: 0 auto;
+      padding-top: 48px;
     }
-    h1 {
+    .hero {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .hero h1 {
       font-size: 2rem;
       font-weight: 700;
       margin-bottom: 8px;
     }
-    .subtitle {
+    .hero p {
       color: #666;
       font-size: 1rem;
-      margin-bottom: 32px;
       line-height: 1.5;
     }
     .search-card {
       background: white;
       border-radius: 16px;
-      padding: 28px;
+      padding: 24px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 32px;
     }
-    input[type="text"] {
-      width: 100%;
+    .search-row {
+      display: flex;
+      gap: 10px;
+    }
+    .search-row input {
+      flex: 1;
       padding: 14px 16px;
       border: 2px solid #e0e0e0;
       border-radius: 12px;
@@ -48,19 +53,17 @@
       text-align: center;
       letter-spacing: 0.1em;
       transition: border-color 0.15s;
-      margin-bottom: 12px;
     }
-    input[type="text"]:focus {
+    .search-row input:focus {
       outline: none;
       border-color: #2563eb;
     }
-    input[type="text"]::placeholder {
+    .search-row input::placeholder {
       letter-spacing: normal;
       color: #bbb;
     }
-    .submit-btn {
-      width: 100%;
-      padding: 14px;
+    .search-row button {
+      padding: 14px 24px;
       background: #2563eb;
       color: white;
       border: none;
@@ -69,19 +72,31 @@
       font-weight: 600;
       cursor: pointer;
       transition: background 0.15s;
+      white-space: nowrap;
     }
-    .submit-btn:hover { background: #1d4ed8; }
-    .submit-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+    .search-row button:hover { background: #1d4ed8; }
+    .search-row button:disabled { background: #93c5fd; cursor: not-allowed; }
     .hint {
       font-size: 0.8rem;
       color: #999;
-      margin-top: 8px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 0.875rem;
+      text-align: center;
     }
     .status {
-      padding: 20px 0 8px;
+      padding: 16px 0 4px;
       color: #555;
       font-size: 0.95rem;
       display: none;
+      text-align: center;
     }
     .status.active { display: block; }
     .spinner {
@@ -96,117 +111,142 @@
       margin-right: 8px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .error {
-      background: #fee2e2;
-      color: #991b1b;
-      padding: 12px;
-      border-radius: 10px;
-      margin-bottom: 16px;
-      font-size: 0.875rem;
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #999;
+      margin-bottom: 12px;
+    }
+    .markets {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .market-btn {
+      display: block;
+      background: white;
+      border: 2px solid #e8e8e8;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .market-btn:hover {
+      border-color: #2563eb;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.1);
+    }
+    .market-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+    .market-zip {
+      font-size: 0.75rem;
+      color: #999;
+    }
+
+    @media (min-width: 480px) {
+      .markets { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Deal Lab</h1>
-    <p class="subtitle" id="subtitle">Finding deals near you...</p>
+  <div class="page">
+    <div class="hero">
+      <h1>Deal Lab</h1>
+      <p>Pull live listings and score every deal with AI</p>
+    </div>
 
     {% if error %}
     <div class="error">{{ error }}</div>
     {% endif %}
 
     <div class="search-card">
-      <form method="POST" action="/search" id="search-form" style="display: none;">
-        <input type="text" name="zip_code" id="zip-input" placeholder="e.g. 94601" maxlength="5" pattern="[0-9]{5}" required autofocus>
-        <button type="submit" class="submit-btn" id="submit-btn">Find Deals</button>
-        <p class="hint">Pulls active listings from Redfin and scores them with AI</p>
+      <form method="POST" action="/search" id="search-form">
+        <div class="search-row">
+          <input type="text" name="zip_code" id="zip-input" placeholder="Enter zip code" maxlength="5" pattern="[0-9]{5}" required autofocus>
+          <button type="submit" id="submit-btn">Find Deals</button>
+        </div>
+        <p class="hint">Pulls active listings and scores them with AI</p>
       </form>
-
-      <div class="status active" id="detect-status">
-        <span class="spinner"></span>
-        Detecting your location...
-      </div>
-
       <div class="status" id="loading-status">
         <span class="spinner"></span>
-        <span id="loading-text">Pulling listings and running analysis...</span><br>
-        <span style="font-size: 0.8rem; color: #999;">This takes about 30-60 seconds</span>
+        <span>Pulling listings and running analysis...</span><br>
+        <span style="font-size: 0.8rem; color: #999;">This takes about 30 seconds</span>
       </div>
+    </div>
+
+    <div class="section-label">Explore hot markets</div>
+    <div class="markets" id="market-grid">
+      <a class="market-btn" data-zip="78701" href="#">
+        <div class="market-name">Austin, TX</div>
+        <div class="market-zip">78701</div>
+      </a>
+      <a class="market-btn" data-zip="33130" href="#">
+        <div class="market-name">Miami, FL</div>
+        <div class="market-zip">33130</div>
+      </a>
+      <a class="market-btn" data-zip="37203" href="#">
+        <div class="market-name">Nashville, TN</div>
+        <div class="market-zip">37203</div>
+      </a>
+      <a class="market-btn" data-zip="85004" href="#">
+        <div class="market-name">Phoenix, AZ</div>
+        <div class="market-zip">85004</div>
+      </a>
+      <a class="market-btn" data-zip="28202" href="#">
+        <div class="market-name">Charlotte, NC</div>
+        <div class="market-zip">28202</div>
+      </a>
+      <a class="market-btn" data-zip="33602" href="#">
+        <div class="market-name">Tampa, FL</div>
+        <div class="market-zip">33602</div>
+      </a>
+      <a class="market-btn" data-zip="30308" href="#">
+        <div class="market-name">Atlanta, GA</div>
+        <div class="market-zip">30308</div>
+      </a>
+      <a class="market-btn" data-zip="89101" href="#">
+        <div class="market-name">Las Vegas, NV</div>
+        <div class="market-zip">89101</div>
+      </a>
+      <a class="market-btn" data-zip="80202" href="#">
+        <div class="market-name">Denver, CO</div>
+        <div class="market-zip">80202</div>
+      </a>
     </div>
   </div>
 
   <script>
     var form = document.getElementById('search-form');
     var zipInput = document.getElementById('zip-input');
-    var detectStatus = document.getElementById('detect-status');
-    var loadingStatus = document.getElementById('loading-status');
-    var subtitle = document.getElementById('subtitle');
     var submitBtn = document.getElementById('submit-btn');
+    var loadingStatus = document.getElementById('loading-status');
 
-    function showForm(zip) {
-      detectStatus.classList.remove('active');
-      form.style.display = 'block';
-      if (zip) {
-        zipInput.value = zip;
-      }
-      subtitle.textContent = 'Pull live listings and score every deal';
-    }
-
-    function autoSubmit(zip) {
-      zipInput.value = zip;
-      subtitle.textContent = 'Found you in ' + zip;
-      detectStatus.classList.remove('active');
-      loadingStatus.classList.add('active');
-      form.style.display = 'none';
-      // Small delay so the user sees what happened
-      setTimeout(function() {
-        form.submit();
-      }, 500);
-    }
-
-    // Manual submit handler
     form.addEventListener('submit', function() {
       submitBtn.disabled = true;
-      submitBtn.style.display = 'none';
+      submitBtn.textContent = 'Searching...';
       loadingStatus.classList.add('active');
     });
 
-    // Auto-detect location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        function(pos) {
-          // Got location — reverse geocode to get zip
-          var url = 'https://nominatim.openstreetmap.org/reverse?lat=' +
-            pos.coords.latitude + '&lon=' + pos.coords.longitude +
-            '&format=json&zoom=18';
-
-          fetch(url, { headers: { 'Accept': 'application/json' } })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-              var zip = data.address && data.address.postcode;
-              if (zip && /^\d{5}/.test(zip)) {
-                zip = zip.substring(0, 5);
-                autoSubmit(zip);
-              } else {
-                showForm();
-              }
-            })
-            .catch(function() { showForm(); });
-        },
-        function() {
-          // Location denied or error — show manual form
-          showForm();
-        },
-        { timeout: 5000 }
-      );
-    } else {
-      showForm();
-    }
-
-    {% if error %}
-    // If we're showing an error, make sure the form is visible
-    showForm();
-    {% endif %}
+    // Market buttons trigger search
+    document.querySelectorAll('.market-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var zip = btn.getAttribute('data-zip');
+        zipInput.value = zip;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Searching...';
+        loadingStatus.classList.add('active');
+        form.submit();
+      });
+    });
   </script>
 </body>
 </html>
