@@ -146,15 +146,16 @@ def _build_content(listing: Listing) -> list:
         "Return ONLY valid JSON matching the required schema.",
     ])
 
-    # Build content blocks
-    content = [{"type": "text", "text": "\n".join(lines)}]
+    # Build content blocks (Responses API uses input_text / input_image)
+    content = [{"type": "input_text", "text": "\n".join(lines)}]
 
     # Add up to 4 photos for vision analysis
     if has_photos:
         for url in listing.photo_urls[:4]:
             content.append({
-                "type": "image_url",
-                "image_url": {"url": url, "detail": "low"},
+                "type": "input_image",
+                "image_url": url,
+                "detail": "low",
             })
 
     return content
