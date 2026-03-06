@@ -34,7 +34,7 @@ def search():
 
     try:
         # Pull listings
-        listings = fetch_listings(zip_code, max_listings=3)
+        listings = fetch_listings(zip_code, max_listings=8)
         if not listings:
             return render_template(
                 "form.html",
