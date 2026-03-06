@@ -23,6 +23,27 @@ def index():
     return render_template("form.html", error=None)
 
 
+@app.route("/debug")
+def debug():
+    """Temp debug endpoint to check what's happening."""
+    import json
+    info = {
+        "rapidapi_key_set": bool(os.environ.get("RAPIDAPI_KEY")),
+        "openai_key_set": bool(os.environ.get("OPENAI_API_KEY")),
+    }
+    # Quick test of RapidAPI
+    try:
+        from listing_api import _fetch_via_rapidapi
+        listings = _fetch_via_rapidapi("94601", max_listings=1)
+        info["rapidapi_listings"] = len(listings)
+        if listings:
+            info["first_listing"] = listings[0].address
+    except Exception as e:
+        info["rapidapi_error"] = str(e)
+
+    return f"<pre>{json.dumps(info, indent=2)}</pre>"
+
+
 @app.route("/search", methods=["POST"])
 def search():
     zip_code = request.form.get("zip_code", "").strip()
