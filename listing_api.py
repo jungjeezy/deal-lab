@@ -13,24 +13,26 @@ from models import Listing, safe_float, safe_int
 
 
 def _fetch_via_rapidapi(zip_code: str, max_listings: int = 20) -> List[Listing]:
-    """Fetch listings using the Realtor API on RapidAPI."""
+    """Fetch listings using the Realty in US API on RapidAPI."""
     api_key = os.environ.get("RAPIDAPI_KEY", "")
     if not api_key:
         return []
 
     print(f"Fetching listings for {zip_code} via RapidAPI...")
     try:
-        resp = httpx.get(
-            "https://realty-in-us.p.rapidapi.com/properties/v2/list-for-sale",
-            params={
-                "postal_code": zip_code,
-                "limit": str(max_listings),
-                "offset": "0",
-                "sort": "relevance",
-            },
+        resp = httpx.post(
+            "https://realty-in-us.p.rapidapi.com/properties/v3/list",
             headers={
-                "x-rapidapi-key": api_key,
+                "Content-Type": "application/json",
                 "x-rapidapi-host": "realty-in-us.p.rapidapi.com",
+                "x-rapidapi-key": api_key,
+            },
+            json={
+                "limit": max_listings,
+                "offset": 0,
+                "postal_code": zip_code,
+                "status": ["for_sale"],
+                "sort": {"direction": "desc", "field": "list_date"},
             },
             timeout=30,
         )
@@ -43,49 +45,55 @@ def _fetch_via_rapidapi(zip_code: str, max_listings: int = 20) -> List[Listing]:
 
     # Parse the response into Listing objects
     listings: List[Listing] = []
-    properties = data.get("properties", [])
 
-    if not properties:
-        print(f"No properties in RapidAPI response. Keys: {list(data.keys())}")
+    # v3 response: data.home_search.results
+    results = data.get("data", {}).get("home_search", {}).get("results", [])
+    if not results:
+        # Fallback: try top-level properties
+        results = data.get("properties", [])
+    if not results:
+        print(f"No properties in response. Top keys: {list(data.keys())}")
         return []
 
-    for prop in properties:
+    for prop in results:
         try:
-            addr = prop.get("address", {})
+            # v3 nests address under location
+            loc = prop.get("location", {})
+            addr = loc.get("address", {}) if loc else {}
+            if not addr:
+                addr = prop.get("address", {}) or {}
+
             address = addr.get("line", "") or ""
             city = addr.get("city", "") or ""
             state = addr.get("state_code", "") or addr.get("state", "") or ""
             postal = addr.get("postal_code", "") or ""
 
-            price = safe_float(prop.get("price"))
+            # v3 uses list_price
+            price = safe_float(prop.get("list_price") or prop.get("price"))
             if not price or not address:
                 continue
 
-            beds = safe_float(prop.get("beds"))
-            baths = safe_float(prop.get("baths"))
+            # v3 nests details under description
+            desc = prop.get("description", {}) or {}
+            beds = safe_float(desc.get("beds") or prop.get("beds"))
+            baths = safe_float(desc.get("baths") or prop.get("baths"))
+            sqft = safe_float(desc.get("sqft") or desc.get("sqft_raw"))
+            year_built = safe_int(desc.get("year_built"))
+            lot_sqft = safe_float(desc.get("lot_sqft"))
+            prop_type = desc.get("type") or prop.get("prop_type")
 
-            # Square footage
-            building = prop.get("building_size", {}) or {}
-            sqft = safe_float(building.get("size"))
-
-            # Lot size
-            lot = prop.get("lot_size", {}) or {}
-            lot_sqft = safe_float(lot.get("size"))
+            # Lot size as string
             lot_size = None
             if lot_sqft:
-                lot_units = lot.get("units", "sqft")
-                if lot_units == "acres" or lot_sqft >= 43560:
-                    lot_size = f"{lot_sqft / 43560:.2f} acres" if lot_units == "sqft" else f"{lot_sqft} acres"
+                if lot_sqft >= 43560:
+                    lot_size = f"{lot_sqft / 43560:.2f} acres"
                 else:
                     lot_size = f"{lot_sqft:,.0f} sqft"
 
-            year_built = safe_int(prop.get("year_built"))
-
-            # Property type
-            prop_type = prop.get("prop_type") or prop.get("property_type")
-
             # Link
-            link = prop.get("rdc_web_url") or ""
+            link = prop.get("href") or ""
+            if link and not link.startswith("http"):
+                link = f"https://www.realtor.com{link}"
 
             # Price per sqft
             ppsf = None
