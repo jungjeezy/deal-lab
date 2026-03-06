@@ -15,30 +15,26 @@ HTML_TEMPLATE = """\
     * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 
     body {{
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #F9F5F0;
       min-height: 100vh;
       padding: 16px;
-      color: #f0f0f5;
-      -webkit-font-smoothing: antialiased;
+      color: #3D3929;
     }}
 
     .header {{
       text-align: center;
-      margin-bottom: 24px;
-      padding: 24px 0 16px;
+      margin-bottom: 20px;
+      padding: 24px 0 12px;
     }}
     .header h1 {{
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 700;
+      color: #2C2516;
       letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
     }}
     .header p {{
-      color: rgba(255,255,255,0.5);
+      color: #B5A898;
       font-size: 0.85rem;
       margin-top: 4px;
     }}
@@ -58,53 +54,48 @@ HTML_TEMPLATE = """\
     .zip-bar input {{
       width: 80px;
       padding: 8px 10px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 10px;
+      background: #fff;
+      border: 1.5px solid #E8E0D5;
+      border-radius: 12px;
       font-size: 0.9rem;
       font-family: inherit;
       text-align: center;
       letter-spacing: 0.1em;
-      color: #fff;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      color: #2C2516;
     }}
     .zip-bar input:focus {{
       outline: none;
-      border-color: rgba(165,180,252,0.6);
+      border-color: #D4A574;
     }}
     .zip-bar button {{
       padding: 8px 16px;
-      background: rgba(255,255,255,0.15);
+      background: #D4A574;
       color: #fff;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 10px;
+      border: none;
+      border-radius: 12px;
       font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      transition: background 0.2s;
+      transition: background 0.15s;
     }}
-    .zip-bar button:hover {{ background: rgba(255,255,255,0.25); }}
+    .zip-bar button:hover {{ background: #C4946A; }}
     .zip-bar span {{
-      color: rgba(255,255,255,0.5);
+      color: #B5A898;
       font-size: 0.85rem;
     }}
 
     .card {{
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.12);
+      background: #fff;
       border-radius: 20px;
-      padding: 20px;
+      padding: 22px;
       margin-bottom: 16px;
-      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 1px 3px rgba(60,40,10,0.04), 0 6px 20px rgba(60,40,10,0.05);
+      border-left: 4px solid var(--accent);
+      transition: box-shadow 0.2s, transform 0.15s;
     }}
     .card:hover {{
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 8px rgba(60,40,10,0.06), 0 12px 32px rgba(60,40,10,0.07);
+      transform: translateY(-1px);
     }}
 
     .card-top {{
@@ -113,52 +104,19 @@ HTML_TEMPLATE = """\
       gap: 14px;
       margin-bottom: 16px;
     }}
-    .score-ring {{
-      position: relative;
-      width: 56px;
-      height: 56px;
-      flex-shrink: 0;
-    }}
-    .score-ring svg {{
-      width: 56px;
-      height: 56px;
-      transform: rotate(-90deg);
-    }}
-    .score-ring .bg {{
-      fill: none;
-      stroke: rgba(255,255,255,0.1);
-      stroke-width: 4;
-    }}
-    .score-ring .fg {{
-      fill: none;
-      stroke: var(--accent);
-      stroke-width: 4;
-      stroke-linecap: round;
-      stroke-dasharray: var(--dash);
-      stroke-dashoffset: var(--offset);
-      transition: stroke-dashoffset 0.6s ease;
-    }}
-    .score-num {{
-      position: absolute;
-      inset: 0;
+
+    .score-circle {{
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
       font-weight: 700;
-      color: var(--accent);
-    }}
-    .score-tag {{
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      background: var(--accent-bg);
-      color: var(--accent);
-      margin-top: 6px;
+      font-size: 1.25rem;
+      color: #fff;
+      background: var(--accent);
+      flex-shrink: 0;
     }}
 
     .card-info {{ flex: 1; }}
@@ -166,30 +124,42 @@ HTML_TEMPLATE = """\
       font-size: 1rem;
       font-weight: 600;
       line-height: 1.3;
-      color: #fff;
+      color: #2C2516;
     }}
     .card-info .price {{
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 700;
-      color: #fff;
+      color: #2C2516;
       margin-top: 2px;
     }}
     .card-info .meta {{
       font-size: 0.78rem;
-      color: rgba(255,255,255,0.45);
+      color: #B5A898;
       margin-top: 3px;
+    }}
+    .score-tag {{
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      background: var(--accent-light);
+      color: var(--accent);
+      margin-top: 6px;
     }}
 
     .pitch {{
-      background: rgba(165,180,252,0.1);
-      border: 1px solid rgba(165,180,252,0.2);
-      border-radius: 12px;
-      padding: 12px 14px;
+      background: #FAF7F3;
+      border-radius: 14px;
+      padding: 14px 16px;
       margin-bottom: 16px;
       font-size: 0.9rem;
-      line-height: 1.5;
-      color: rgba(255,255,255,0.85);
+      line-height: 1.55;
+      color: #5C5344;
       font-style: italic;
+      border-left: 3px solid #E8E0D5;
     }}
 
     .stats {{
@@ -199,32 +169,31 @@ HTML_TEMPLATE = """\
       margin-bottom: 16px;
     }}
     .stat {{
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: #FAF7F3;
       border-radius: 14px;
       padding: 12px;
     }}
     .stat-label {{
-      font-size: 0.65rem;
+      font-size: 0.68rem;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 4px;
+      letter-spacing: 0.05em;
+      color: #B5A898;
+      margin-bottom: 3px;
     }}
     .stat-value {{
       font-size: 0.95rem;
       font-weight: 600;
-      color: #fff;
+      color: #2C2516;
     }}
     .stat-hint {{
       font-size: 0.7rem;
-      color: rgba(255,255,255,0.35);
+      color: #C8BDB0;
       margin-top: 2px;
     }}
 
-    .verdict-under {{ color: #4ade80; }}
-    .verdict-fair {{ color: #facc15; }}
-    .verdict-over {{ color: #f87171; }}
+    .verdict-under {{ color: #3B8C5E; }}
+    .verdict-fair {{ color: #B8860B; }}
+    .verdict-over {{ color: #C44B3A; }}
 
     .pills {{
       display: flex;
@@ -237,30 +206,31 @@ HTML_TEMPLATE = """\
       border-radius: 20px;
       font-size: 0.75rem;
       font-weight: 500;
-      background: rgba(74,222,128,0.12);
-      color: #4ade80;
-      border: 1px solid rgba(74,222,128,0.2);
+      background: #F0F5ED;
+      color: #3B6B3A;
     }}
     .pill-warn {{
-      background: rgba(251,191,36,0.1);
-      color: #fbbf24;
-      border-color: rgba(251,191,36,0.2);
+      background: #FDF5E6;
+      color: #8B6914;
     }}
 
     .detail-toggle {{
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
+      background: #FAF7F3;
+      border: 1.5px solid #EDE7DE;
+      border-radius: 14px;
       padding: 11px 16px;
       width: 100%;
       cursor: pointer;
       font-size: 0.85rem;
       font-weight: 500;
-      color: rgba(255,255,255,0.6);
+      color: #9C8E7C;
       font-family: inherit;
-      transition: background 0.2s;
+      transition: background 0.15s, border-color 0.15s;
     }}
-    .detail-toggle:hover {{ background: rgba(255,255,255,0.1); }}
+    .detail-toggle:hover {{
+      background: #F5EFE7;
+      border-color: #D4A574;
+    }}
 
     .details {{
       overflow: hidden;
@@ -278,40 +248,95 @@ HTML_TEMPLATE = """\
       margin-bottom: 16px;
     }}
     .detail-section h3 {{
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.05em;
+      color: #B5A898;
       margin-bottom: 8px;
     }}
     .detail-section p {{
       font-size: 0.875rem;
       line-height: 1.6;
-      color: rgba(255,255,255,0.75);
-    }}
-    .detail-section ul {{
-      list-style: none;
-      padding: 0;
-    }}
-    .detail-section ul li {{
-      font-size: 0.85rem;
-      padding: 4px 0;
-      color: rgba(255,255,255,0.7);
+      color: #5C5344;
     }}
 
     .listing-link {{
       display: inline-block;
       margin-top: 8px;
-      color: #a5b4fc;
+      color: #D4A574;
       text-decoration: none;
       font-size: 0.85rem;
       font-weight: 500;
-      transition: color 0.15s;
     }}
-    .listing-link:hover {{ color: #c7d2fe; }}
+    .listing-link:hover {{ text-decoration: underline; color: #C4946A; }}
+
+    .gallery {{
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      border-radius: 14px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }}
+    .gallery::-webkit-scrollbar {{ display: none; }}
+    .gallery img {{
+      height: 140px;
+      min-width: 140px;
+      object-fit: cover;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }}
+    .gallery img:first-child {{
+      min-width: 200px;
+      height: 140px;
+    }}
+
+    .media-row {{
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }}
+    .media-row .gallery {{
+      flex: 1;
+      margin-bottom: 0;
+    }}
+    .mini-map {{
+      width: 140px;
+      height: 140px;
+      border-radius: 14px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid #EDE7DE;
+    }}
+    .mini-map iframe {{
+      width: 100%;
+      height: 100%;
+      border: none;
+    }}
+
+    .photo-insights {{
+      margin-bottom: 16px;
+    }}
+    .photo-insights ul {{
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }}
+    .photo-insights li {{
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: #5C5344;
+      padding: 10px 14px;
+      background: #FAF7F3;
+      border-radius: 12px;
+      border-left: 3px solid #D4A574;
+    }}
 
     @media (min-width: 768px) {{
-      body {{ max-width: 800px; margin: 0 auto; }}
+      body {{ max-width: 720px; margin: 0 auto; }}
       .stats {{ grid-template-columns: 1fr 1fr 1fr; }}
     }}
   </style>
@@ -339,22 +364,22 @@ HTML_TEMPLATE = """\
 
 def _accent_color(score: float) -> str:
     if score >= 8:
-        return "#4ade80"
+        return "#3B8C5E"
     elif score >= 6:
-        return "#a5b4fc"
+        return "#D4A574"
     elif score >= 4:
-        return "#facc15"
-    return "#f87171"
+        return "#B8860B"
+    return "#C44B3A"
 
 
-def _accent_bg(score: float) -> str:
+def _accent_light(score: float) -> str:
     if score >= 8:
-        return "rgba(74,222,128,0.15)"
+        return "#E8F5ED"
     elif score >= 6:
-        return "rgba(165,180,252,0.15)"
+        return "#FDF5EC"
     elif score >= 4:
-        return "rgba(250,204,21,0.15)"
-    return "rgba(248,113,113,0.15)"
+        return "#FDF5E6"
+    return "#FDEAE7"
 
 
 def _fmt_price(val: float) -> str:
@@ -369,27 +394,12 @@ def _esc(text: str) -> str:
     return html.escape(str(text))
 
 
-def _score_ring(score: float, accent: str) -> str:
-    """SVG circular progress ring for the score."""
-    circumference = 2 * 3.14159 * 22  # radius = 22
-    dash = circumference
-    offset = circumference - (score / 10) * circumference
-    return f"""\
-    <div class="score-ring" style="--accent: {accent}; --dash: {dash:.1f}; --offset: {offset:.1f}">
-      <svg viewBox="0 0 48 48">
-        <circle class="bg" cx="24" cy="24" r="22"/>
-        <circle class="fg" cx="24" cy="24" r="22"/>
-      </svg>
-      <div class="score-num">{score:.0f}</div>
-    </div>"""
-
-
 def _render_card(
     listing: Listing, analysis: Dict[str, Any], rank: int
 ) -> str:
     score = analysis["score"]
     accent = _accent_color(score)
-    accent_bg = _accent_bg(score)
+    accent_light = _accent_light(score)
     label = analysis["score_label"]
     price_info = analysis["price_assessment"]
     monthly = analysis["estimated_monthly"]
@@ -430,10 +440,47 @@ def _render_card(
             f'target="_blank" rel="noopener">View listing &rarr;</a>'
         )
 
+    # Photo gallery
+    gallery_html = ""
+    if listing.photo_urls:
+        imgs = "".join(
+            f'<img src="{_esc(url)}" alt="Listing photo" loading="lazy">'
+            for url in listing.photo_urls[:6]
+        )
+        gallery_html = f'<div class="gallery">{imgs}</div>'
+
+    # Mini map
+    map_html = ""
+    if listing.latitude and listing.longitude:
+        lat, lon = listing.latitude, listing.longitude
+        osm_url = (
+            f"https://www.openstreetmap.org/export/embed.html"
+            f"?bbox={lon-0.005},{lat-0.003},{lon+0.005},{lat+0.003}"
+            f"&layer=mapnik&marker={lat},{lon}"
+        )
+        map_html = f'<div class="mini-map"><iframe src="{osm_url}" loading="lazy"></iframe></div>'
+
+    # Combine gallery + map
+    if gallery_html and map_html:
+        media_html = f'<div class="media-row">{gallery_html}{map_html}</div>'
+    elif gallery_html:
+        media_html = gallery_html
+    elif map_html:
+        media_html = map_html
+    else:
+        media_html = ""
+
+    # Photo insights
+    photo_insights_html = ""
+    insights = analysis.get("photo_insights", [])
+    if insights:
+        items = "".join(f"<li>{_esc(i)}</li>" for i in insights)
+        photo_insights_html = f'<div class="photo-insights"><ul>{items}</ul></div>'
+
     return f"""\
-  <div class="card" style="--accent: {accent}; --accent-bg: {accent_bg}">
+  <div class="card" style="--accent: {accent}; --accent-light: {accent_light}">
     <div class="card-top">
-      {_score_ring(score, accent)}
+      <div class="score-circle">{score:.0f}</div>
       <div class="card-info">
         <h2>{_esc(listing.address)}, {_esc(listing.city)}</h2>
         <div class="price">{_fmt_price(listing.price)}</div>
@@ -442,7 +489,11 @@ def _render_card(
       </div>
     </div>
 
+    {media_html}
+
     <div class="pitch">&ldquo;{_esc(analysis["client_pitch"])}&rdquo;</div>
+
+    {photo_insights_html}
 
     <div class="stats">
       <div class="stat">
