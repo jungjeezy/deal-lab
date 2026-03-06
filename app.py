@@ -68,6 +68,19 @@ def view_dashboard(dashboard_id):
     return html
 
 
+@app.route("/debug")
+def debug():
+    """Quick check that API keys are set."""
+    rapid = os.environ.get("RAPIDAPI_KEY", "")
+    openai_key = os.environ.get("OPENAI_API_KEY", "")
+    return {
+        "rapidapi_key_set": bool(rapid),
+        "rapidapi_key_preview": rapid[:8] + "..." if rapid else "NOT SET",
+        "openai_key_set": bool(openai_key),
+        "openai_key_preview": openai_key[:8] + "..." if openai_key else "NOT SET",
+    }
+
+
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, port=8000)
