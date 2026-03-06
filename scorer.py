@@ -1,9 +1,9 @@
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Tuple
 
 from openai import OpenAI
-from tqdm import tqdm
 
 from models import Listing
 
@@ -13,109 +13,104 @@ MODEL = "gpt-4o-mini"
 def _get_client() -> OpenAI:
     return OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+
 DEAL_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
     "properties": {
-        "deal_score_1_to_10": {"type": "number"},
-        "rehab_tier": {
+        "score": {
+            "type": "number",
+            "description": "1-10 how strong of a buy this is",
+        },
+        "score_label": {
             "type": "string",
-            "enum": ["light", "medium", "heavy", "unknown"],
+            "enum": ["Strong Buy", "Worth Seeing", "Fair Deal", "Overpriced", "Pass"],
         },
-        "arv_estimate": {
+        "price_assessment": {
             "type": "object",
             "additionalProperties": False,
             "properties": {
-                "low": {"type": "number"},
-                "high": {"type": "number"},
-                "assumptions": {"type": "string"},
-            },
-            "required": ["low", "high", "assumptions"],
-        },
-        "rehab_cost_estimate": {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {
-                "low": {"type": "number"},
-                "high": {"type": "number"},
-                "assumptions": {"type": "string"},
-            },
-            "required": ["low", "high", "assumptions"],
-        },
-        "mao_estimate": {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {
-                "low": {"type": "number"},
-                "high": {"type": "number"},
-                "method": {"type": "string"},
-            },
-            "required": ["low", "high", "method"],
-        },
-        "exit_strategies": {
-            "type": "object",
-            "additionalProperties": False,
-            "properties": {
-                "flip": {
+                "verdict": {
+                    "type": "string",
+                    "enum": ["under", "fair", "over"],
+                    "description": "Is it priced under, at, or over market value?",
+                },
+                "estimated_value": {
                     "type": "object",
                     "additionalProperties": False,
                     "properties": {
-                        "fit": {"type": "string", "enum": ["good", "ok", "bad"]},
-                        "notes": {"type": "string"},
+                        "low": {"type": "number"},
+                        "high": {"type": "number"},
                     },
-                    "required": ["fit", "notes"],
+                    "required": ["low", "high"],
                 },
-                "rental": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "properties": {
-                        "fit": {"type": "string", "enum": ["good", "ok", "bad"]},
-                        "notes": {"type": "string"},
-                        "rough_rent_monthly": {
-                            "type": "object",
-                            "additionalProperties": False,
-                            "properties": {
-                                "low": {"type": "number"},
-                                "high": {"type": "number"},
-                            },
-                            "required": ["low", "high"],
-                        },
-                    },
-                    "required": ["fit", "notes", "rough_rent_monthly"],
+                "explanation": {
+                    "type": "string",
+                    "description": "1-2 sentences on why, referencing comps or area trends",
                 },
             },
-            "required": ["flip", "rental"],
+            "required": ["verdict", "estimated_value", "explanation"],
         },
-        "top_risks": {
+        "buyer_appeal": {
             "type": "array",
             "items": {"type": "string"},
             "minItems": 3,
             "maxItems": 3,
+            "description": "3 things buyers will love about this property, in plain English",
         },
-        "one_paragraph_rationale": {"type": "string"},
+        "watch_out": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 2,
+            "maxItems": 3,
+            "description": "2-3 concerns: inspection items, negotiation leverage, or deal breakers",
+        },
+        "negotiation_insight": {
+            "type": "string",
+            "description": "One concrete negotiation tip for an agent representing a buyer",
+        },
+        "client_pitch": {
+            "type": "string",
+            "description": "One punchy sentence an agent could text a client about this property",
+        },
+        "bottom_line": {
+            "type": "string",
+            "description": "2-3 sentence honest assessment of this property as a purchase",
+        },
+        "estimated_monthly": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "mortgage": {"type": "number", "description": "Estimated monthly mortgage at 7% / 30yr / 20% down"},
+                "total": {"type": "number", "description": "Mortgage + taxes + insurance + HOA estimate"},
+            },
+            "required": ["mortgage", "total"],
+        },
     },
     "required": [
-        "deal_score_1_to_10",
-        "rehab_tier",
-        "arv_estimate",
-        "rehab_cost_estimate",
-        "mao_estimate",
-        "exit_strategies",
-        "top_risks",
-        "one_paragraph_rationale",
+        "score",
+        "score_label",
+        "price_assessment",
+        "buyer_appeal",
+        "watch_out",
+        "negotiation_insight",
+        "client_pitch",
+        "bottom_line",
+        "estimated_monthly",
     ],
 }
 
 
 def build_prompt(l: Listing) -> str:
-    """Build the analysis prompt, including enriched fields when available."""
+    """Build the analysis prompt for agent-focused evaluation."""
     lines = [
-        "You are a conservative real estate investor analyzing deals.",
+        "You are an experienced real estate agent evaluating a listing for a buyer client.",
+        "Be honest, specific, and practical. Write like you're briefing a fellow agent.",
         "",
         "Listing:",
         f"Address: {l.address}, {l.city}"
         + (f", {l.state} {l.zip_code}" if l.state else ""),
-        f"Price: ${l.price:,.0f}",
+        f"Asking Price: ${l.price:,.0f}",
     ]
 
     if l.beds is not None:
@@ -144,10 +139,12 @@ def build_prompt(l: Listing) -> str:
     lines.extend(
         [
             "",
-            "Be conservative. Assume high labor + permit costs typical of California.",
-            "If uncertain, widen ranges.",
+            "Evaluate this listing as if advising a buyer client.",
+            "Consider: Is the price right? What will buyers love? What should they watch for?",
+            "What negotiation leverage exists? What would you text a client about this one?",
+            "For monthly costs, assume 7% rate, 30yr fixed, 20% down.",
             "",
-            "Return ONLY valid JSON that matches the required schema.",
+            "Return ONLY valid JSON matching the required schema.",
         ]
     )
     return "\n".join(lines)
@@ -160,11 +157,11 @@ def call_openai(prompt: str) -> Dict[str, Any]:
         input=[
             {
                 "role": "system",
-                "content": "Return ONLY valid JSON. No markdown. No extra commentary.",
+                "content": "You are a sharp real estate agent. Return ONLY valid JSON. No markdown.",
             },
             {"role": "user", "content": prompt},
         ],
-        temperature=0.2,
+        temperature=0.3,
         text={
             "format": {
                 "type": "json_schema",
@@ -177,12 +174,33 @@ def call_openai(prompt: str) -> Dict[str, Any]:
     return json.loads(response.output_text)
 
 
+def _score_one(listing: Listing) -> Tuple[Listing, Dict[str, Any]]:
+    """Score a single listing. Used for parallel execution."""
+    analysis = call_openai(build_prompt(listing))
+    return (listing, analysis)
+
+
 def score_listings(
     listings: List[Listing],
 ) -> List[Tuple[Listing, Dict[str, Any]]]:
-    """Score all listings. Returns list of (listing, analysis_dict) pairs."""
-    results = []
-    for listing in tqdm(listings, desc="Scoring deals"):
-        analysis = call_openai(build_prompt(listing))
-        results.append((listing, analysis))
+    """Score all listings in parallel. Returns list of (listing, analysis_dict) pairs."""
+    results: List[Tuple[Listing, Dict[str, Any]]] = []
+
+    with ThreadPoolExecutor(max_workers=min(len(listings), 10)) as executor:
+        futures = {
+            executor.submit(_score_one, listing): i
+            for i, listing in enumerate(listings)
+        }
+        # Collect results preserving original order
+        ordered = [None] * len(listings)
+        for future in as_completed(futures):
+            idx = futures[future]
+            try:
+                ordered[idx] = future.result()
+            except Exception as e:
+                print(f"Error scoring listing {idx}: {e}")
+
+        results = [r for r in ordered if r is not None]
+
+    print(f"Scored {len(results)}/{len(listings)} listings.")
     return results
