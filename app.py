@@ -102,6 +102,26 @@ def debug_fetch(zip_code):
         return {"error": str(e)}
 
 
+@app.route("/debug/score/<zip_code>")
+def debug_score(zip_code):
+    """Test scoring a single listing."""
+    try:
+        listings = fetch_listings(zip_code, max_listings=1)
+        if not listings:
+            return {"error": "no listings found"}
+        from scorer import call_openai
+        analysis = call_openai(listings[0])
+        return {
+            "address": listings[0].address,
+            "score": analysis.get("score"),
+            "label": analysis.get("score_label"),
+            "success": True,
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, port=8000)
