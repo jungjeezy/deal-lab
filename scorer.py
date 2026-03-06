@@ -33,7 +33,6 @@ DEAL_SCHEMA = {
                 "verdict": {
                     "type": "string",
                     "enum": ["under", "fair", "over"],
-                    "description": "Is it priced under, at, or over market value?",
                 },
                 "estimated_value": {
                     "type": "object",
@@ -44,10 +43,7 @@ DEAL_SCHEMA = {
                     },
                     "required": ["low", "high"],
                 },
-                "explanation": {
-                    "type": "string",
-                    "description": "1-2 sentences on why, referencing comps or area trends",
-                },
+                "explanation": {"type": "string"},
             },
             "required": ["verdict", "estimated_value", "explanation"],
         },
@@ -56,33 +52,32 @@ DEAL_SCHEMA = {
             "items": {"type": "string"},
             "minItems": 3,
             "maxItems": 3,
-            "description": "3 things buyers will love about this property, in plain English",
         },
         "watch_out": {
             "type": "array",
             "items": {"type": "string"},
             "minItems": 2,
             "maxItems": 3,
-            "description": "2-3 concerns: inspection items, negotiation leverage, or deal breakers",
         },
-        "negotiation_insight": {
-            "type": "string",
-            "description": "One concrete negotiation tip for an agent representing a buyer",
+        "photo_insights": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "3 specific observations from the listing photos about condition, style, updates, or red flags. If no photos, base on listing details.",
         },
+        "negotiation_insight": {"type": "string"},
         "client_pitch": {
             "type": "string",
-            "description": "One punchy sentence an agent could text a client about this property",
+            "description": "One punchy sentence an agent could text a client",
         },
-        "bottom_line": {
-            "type": "string",
-            "description": "2-3 sentence honest assessment of this property as a purchase",
-        },
+        "bottom_line": {"type": "string"},
         "estimated_monthly": {
             "type": "object",
             "additionalProperties": False,
             "properties": {
-                "mortgage": {"type": "number", "description": "Estimated monthly mortgage at 7% / 30yr / 20% down"},
-                "total": {"type": "number", "description": "Mortgage + taxes + insurance + HOA estimate"},
+                "mortgage": {"type": "number"},
+                "total": {"type": "number"},
             },
             "required": ["mortgage", "total"],
         },
@@ -93,6 +88,7 @@ DEAL_SCHEMA = {
         "price_assessment",
         "buyer_appeal",
         "watch_out",
+        "photo_insights",
         "negotiation_insight",
         "client_pitch",
         "bottom_line",
@@ -101,57 +97,73 @@ DEAL_SCHEMA = {
 }
 
 
-def build_prompt(l: Listing) -> str:
-    """Build the analysis prompt for agent-focused evaluation."""
+def _build_content(listing: Listing) -> list:
+    """Build the message content with text + optional photos."""
     lines = [
         "You are an experienced real estate agent evaluating a listing for a buyer client.",
-        "Be honest, specific, and practical. Write like you're briefing a fellow agent.",
+        "Be specific and practical. Reference what you SEE in the photos.",
         "",
         "Listing:",
-        f"Address: {l.address}, {l.city}"
-        + (f", {l.state} {l.zip_code}" if l.state else ""),
-        f"Asking Price: ${l.price:,.0f}",
+        f"Address: {listing.address}, {listing.city}"
+        + (f", {listing.state} {listing.zip_code}" if listing.state else ""),
+        f"Asking Price: ${listing.price:,.0f}",
     ]
 
-    if l.beds is not None:
-        lines.append(f"Beds: {l.beds:.0f}")
-    if l.baths is not None:
-        lines.append(f"Baths: {l.baths:.0f}")
-    if l.sqft is not None:
-        lines.append(f"Sqft: {l.sqft:,.0f}")
-    if l.year_built:
-        lines.append(f"Year Built: {l.year_built}")
-    if l.lot_size:
-        lines.append(f"Lot Size: {l.lot_size}")
-    if l.days_on_market is not None:
-        lines.append(f"Days on Market: {l.days_on_market}")
-    if l.hoa_monthly:
-        lines.append(f"HOA/Month: ${l.hoa_monthly:,.0f}")
-    if l.price_per_sqft:
-        lines.append(f"Price per Sqft: ${l.price_per_sqft:,.0f}")
-    if l.property_type:
-        lines.append(f"Property Type: {l.property_type}")
-    if l.link:
-        lines.append(f"Link: {l.link}")
-    if l.notes:
-        lines.append(f"Notes: {l.notes}")
+    if listing.beds is not None:
+        lines.append(f"Beds: {listing.beds:.0f}")
+    if listing.baths is not None:
+        lines.append(f"Baths: {listing.baths:.0f}")
+    if listing.sqft is not None:
+        lines.append(f"Sqft: {listing.sqft:,.0f}")
+    if listing.year_built:
+        lines.append(f"Year Built: {listing.year_built}")
+    if listing.lot_size:
+        lines.append(f"Lot Size: {listing.lot_size}")
+    if listing.days_on_market is not None:
+        lines.append(f"Days on Market: {listing.days_on_market}")
+    if listing.hoa_monthly:
+        lines.append(f"HOA/Month: ${listing.hoa_monthly:,.0f}")
+    if listing.price_per_sqft:
+        lines.append(f"Price per Sqft: ${listing.price_per_sqft:,.0f}")
+    if listing.property_type:
+        lines.append(f"Property Type: {listing.property_type}")
 
-    lines.extend(
-        [
-            "",
-            "Evaluate this listing as if advising a buyer client.",
-            "Consider: Is the price right? What will buyers love? What should they watch for?",
-            "What negotiation leverage exists? What would you text a client about this one?",
-            "For monthly costs, assume 7% rate, 30yr fixed, 20% down.",
-            "",
-            "Return ONLY valid JSON matching the required schema.",
-        ]
-    )
-    return "\n".join(lines)
+    has_photos = bool(listing.photo_urls)
+
+    if has_photos:
+        lines.append("")
+        lines.append("I've attached photos of this property. Look at them carefully.")
+        lines.append("For photo_insights, describe SPECIFIC things you see — kitchen condition,")
+        lines.append("flooring type, bathroom updates, roof condition, yard state, staging quality, etc.")
+    else:
+        lines.append("")
+        lines.append("No photos available. Base photo_insights on what you'd expect given the")
+        lines.append("listing details (age, price point, area).")
+
+    lines.extend([
+        "",
+        "For monthly costs, assume 7% rate, 30yr fixed, 20% down.",
+        "Return ONLY valid JSON matching the required schema.",
+    ])
+
+    # Build content blocks
+    content = [{"type": "text", "text": "\n".join(lines)}]
+
+    # Add up to 4 photos for vision analysis
+    if has_photos:
+        for url in listing.photo_urls[:4]:
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": url, "detail": "low"},
+            })
+
+    return content
 
 
-def call_openai(prompt: str) -> Dict[str, Any]:
-    """Call OpenAI with structured output and return parsed JSON."""
+def call_openai(listing: Listing) -> Dict[str, Any]:
+    """Call OpenAI with structured output + optional vision."""
+    content = _build_content(listing)
+
     response = _get_client().responses.create(
         model=MODEL,
         input=[
@@ -159,7 +171,7 @@ def call_openai(prompt: str) -> Dict[str, Any]:
                 "role": "system",
                 "content": "You are a sharp real estate agent. Return ONLY valid JSON. No markdown.",
             },
-            {"role": "user", "content": prompt},
+            {"role": "user", "content": content},
         ],
         temperature=0.3,
         text={
@@ -176,7 +188,7 @@ def call_openai(prompt: str) -> Dict[str, Any]:
 
 def _score_one(listing: Listing) -> Tuple[Listing, Dict[str, Any]]:
     """Score a single listing. Used for parallel execution."""
-    analysis = call_openai(build_prompt(listing))
+    analysis = call_openai(listing)
     return (listing, analysis)
 
 
@@ -191,7 +203,6 @@ def score_listings(
             executor.submit(_score_one, listing): i
             for i, listing in enumerate(listings)
         }
-        # Collect results preserving original order
         ordered = [None] * len(listings)
         for future in as_completed(futures):
             idx = futures[future]
