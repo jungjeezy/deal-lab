@@ -57,10 +57,19 @@ def _listing_to_dict(listing: Listing) -> dict:
         "state": listing.state,
         "zip_code": listing.zip_code,
         "source": listing.source,
+        "photo_urls": listing.photo_urls,
+        "primary_photo_url": listing.primary_photo_url,
+        "latitude": listing.latitude,
+        "longitude": listing.longitude,
     }
 
 
 def _dict_to_listing(d: dict) -> Listing:
+    # Handle old data missing new fields
+    d.setdefault("photo_urls", [])
+    d.setdefault("primary_photo_url", None)
+    d.setdefault("latitude", None)
+    d.setdefault("longitude", None)
     return Listing(**d)
 
 
