@@ -21,7 +21,7 @@ def _fetch_via_rapidapi(zip_code: str, max_listings: int = 20) -> List[Listing]:
     print(f"Fetching listings for {zip_code} via RapidAPI...")
     try:
         resp = httpx.get(
-            "https://realtor.p.rapidapi.com/properties/v2/list-for-sale",
+            "https://realty-in-us.p.rapidapi.com/properties/v2/list-for-sale",
             params={
                 "postal_code": zip_code,
                 "limit": str(max_listings),
@@ -30,7 +30,7 @@ def _fetch_via_rapidapi(zip_code: str, max_listings: int = 20) -> List[Listing]:
             },
             headers={
                 "x-rapidapi-key": api_key,
-                "x-rapidapi-host": "realtor.p.rapidapi.com",
+                "x-rapidapi-host": "realty-in-us.p.rapidapi.com",
             },
             timeout=30,
         )
