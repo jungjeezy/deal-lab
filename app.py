@@ -31,31 +31,27 @@ def debug():
         "rapidapi_key_set": bool(os.environ.get("RAPIDAPI_KEY")),
         "openai_key_set": bool(os.environ.get("OPENAI_API_KEY")),
     }
-    # Quick test of RapidAPI - show raw response
-    try:
-        import httpx
-        resp = httpx.get(
-            "https://realtor.p.rapidapi.com/properties/v2/list-for-sale",
-            params={"postal_code": "94601", "limit": "2", "offset": "0", "sort": "relevance"},
-            headers={
-                "x-rapidapi-key": os.environ.get("RAPIDAPI_KEY", ""),
-                "x-rapidapi-host": "realtor.p.rapidapi.com",
-            },
-            timeout=15,
-        )
-        info["api_status"] = resp.status_code
-        data = resp.json()
-        info["api_keys"] = list(data.keys())
-        # Show first property structure if any
-        props = data.get("properties", [])
-        info["property_count"] = len(props)
-        if props:
-            info["first_property_keys"] = list(props[0].keys())
-        else:
-            # Show first 500 chars of response
-            info["api_response_preview"] = resp.text[:500]
-    except Exception as e:
-        info["rapidapi_error"] = str(e)
+    # Test both possible hosts
+    import httpx
+    for host in ["realty-in-us.p.rapidapi.com", "realtor.p.rapidapi.com"]:
+        try:
+            resp = httpx.get(
+                f"https://{host}/properties/v2/list-for-sale",
+                params={"postal_code": "94601", "limit": "2", "offset": "0", "sort": "relevance"},
+                headers={
+                    "x-rapidapi-key": os.environ.get("RAPIDAPI_KEY", ""),
+                    "x-rapidapi-host": host,
+                },
+                timeout=15,
+            )
+            data = resp.json()
+            info[host] = {
+                "status": resp.status_code,
+                "keys": list(data.keys()),
+                "preview": resp.text[:300],
+            }
+        except Exception as e:
+            info[host] = {"error": str(e)}
 
     return f"<pre>{json.dumps(info, indent=2)}</pre>"
 
