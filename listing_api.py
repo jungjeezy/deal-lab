@@ -1,11 +1,10 @@
 """Fetch real estate listings by zip code.
 
-Uses RapidAPI (Realty in US) when RAPIDAPI_KEY is set (reliable from cloud),
+Uses RapidAPI (Realtor) when RAPIDAPI_KEY is set (reliable from cloud),
 falls back to Redfin scraping for local dev.
 """
 
 import os
-import time
 from typing import List
 
 import httpx
@@ -14,7 +13,7 @@ from models import Listing, safe_float, safe_int
 
 
 def _fetch_via_rapidapi(zip_code: str, max_listings: int = 20) -> List[Listing]:
-    """Fetch listings using the Realty in US API on RapidAPI."""
+    """Fetch listings using the Realtor API on RapidAPI."""
     api_key = os.environ.get("RAPIDAPI_KEY", "")
     if not api_key:
         return []
@@ -22,20 +21,20 @@ def _fetch_via_rapidapi(zip_code: str, max_listings: int = 20) -> List[Listing]:
     print(f"Fetching listings for {zip_code} via RapidAPI...")
     try:
         resp = httpx.get(
-            "https://realty-in-us.p.rapidapi.com/properties/v3/list",
+            "https://realtor.p.rapidapi.com/properties/v2/list-for-sale",
             params={
                 "postal_code": zip_code,
-                "status": ["for_sale"],
-                "sort": {"direction": "desc", "field": "list_date"},
                 "limit": str(max_listings),
                 "offset": "0",
+                "sort": "relevance",
             },
             headers={
-                "X-RapidAPI-Key": api_key,
-                "X-RapidAPI-Host": "realty-in-us.p.rapidapi.com",
+                "x-rapidapi-key": api_key,
+                "x-rapidapi-host": "realtor.p.rapidapi.com",
             },
             timeout=30,
         )
+        print(f"RapidAPI status: {resp.status_code}")
         resp.raise_for_status()
         data = resp.json()
     except Exception as e:
@@ -44,66 +43,54 @@ def _fetch_via_rapidapi(zip_code: str, max_listings: int = 20) -> List[Listing]:
 
     # Parse the response into Listing objects
     listings: List[Listing] = []
-    properties = data.get("data", {}).get("home_search", {}).get("results", [])
-
-    # Fallback: try v2-style response format
-    if not properties:
-        properties = data.get("properties", [])
+    properties = data.get("properties", [])
 
     if not properties:
-        # Try another level
-        properties = data.get("data", {}).get("results", [])
+        print(f"No properties in RapidAPI response. Keys: {list(data.keys())}")
+        return []
 
     for prop in properties:
         try:
-            # Handle nested address
-            addr = prop.get("location", {}).get("address", {})
-            if not addr:
-                addr = prop.get("address", {})
-
+            addr = prop.get("address", {})
             address = addr.get("line", "") or ""
             city = addr.get("city", "") or ""
             state = addr.get("state_code", "") or addr.get("state", "") or ""
             postal = addr.get("postal_code", "") or ""
 
-            price = safe_float(prop.get("list_price") or prop.get("price"))
+            price = safe_float(prop.get("price"))
             if not price or not address:
                 continue
 
-            # Building size
-            desc = prop.get("description", {})
-            beds = safe_float(desc.get("beds") or prop.get("beds"))
-            baths = safe_float(desc.get("baths") or prop.get("baths"))
-            sqft = safe_float(desc.get("sqft") or prop.get("building_size", {}).get("size"))
-            year_built = safe_int(desc.get("year_built") or prop.get("year_built"))
-            lot_sqft = safe_float(desc.get("lot_sqft") or prop.get("lot_size", {}).get("size"))
+            beds = safe_float(prop.get("beds"))
+            baths = safe_float(prop.get("baths"))
 
-            # Lot size as string
+            # Square footage
+            building = prop.get("building_size", {}) or {}
+            sqft = safe_float(building.get("size"))
+
+            # Lot size
+            lot = prop.get("lot_size", {}) or {}
+            lot_sqft = safe_float(lot.get("size"))
             lot_size = None
             if lot_sqft:
-                if lot_sqft >= 43560:
-                    lot_size = f"{lot_sqft / 43560:.2f} acres"
+                lot_units = lot.get("units", "sqft")
+                if lot_units == "acres" or lot_sqft >= 43560:
+                    lot_size = f"{lot_sqft / 43560:.2f} acres" if lot_units == "sqft" else f"{lot_sqft} acres"
                 else:
                     lot_size = f"{lot_sqft:,.0f} sqft"
 
-            # Days on market
-            dom = safe_int(prop.get("list_date_min") or desc.get("days_on_market"))
+            year_built = safe_int(prop.get("year_built"))
 
-            # HOA
-            hoa = safe_float(prop.get("hoa", {}).get("fee") if isinstance(prop.get("hoa"), dict) else None)
+            # Property type
+            prop_type = prop.get("prop_type") or prop.get("property_type")
+
+            # Link
+            link = prop.get("rdc_web_url") or ""
 
             # Price per sqft
             ppsf = None
             if price and sqft and sqft > 0:
                 ppsf = round(price / sqft, 2)
-
-            # Property type
-            prop_type = desc.get("type") or prop.get("prop_type") or prop.get("property_type")
-
-            # Link
-            link = prop.get("href") or prop.get("rdc_web_url") or ""
-            if link and not link.startswith("http"):
-                link = f"https://www.realtor.com{link}"
 
             listings.append(
                 Listing(
@@ -117,8 +104,8 @@ def _fetch_via_rapidapi(zip_code: str, max_listings: int = 20) -> List[Listing]:
                     notes="",
                     year_built=year_built,
                     lot_size=lot_size,
-                    days_on_market=dom,
-                    hoa_monthly=hoa,
+                    days_on_market=None,
+                    hoa_monthly=None,
                     price_per_sqft=ppsf,
                     property_type=prop_type,
                     state=state,
@@ -143,6 +130,6 @@ def fetch_listings(zip_code: str, max_listings: int = 20) -> List[Listing]:
         return listings
 
     # Fall back to Redfin scraping (works locally)
-    print("RapidAPI not available, trying Redfin...")
+    print("RapidAPI not available or returned no results, trying Redfin...")
     from redfin_api import fetch_listings as redfin_fetch
     return redfin_fetch(zip_code, max_listings)
