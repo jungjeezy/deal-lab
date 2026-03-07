@@ -146,16 +146,15 @@ def _build_content(listing: Listing) -> list:
         "Return ONLY valid JSON matching the required schema.",
     ])
 
-    # Build content blocks (Responses API uses input_text / input_image)
-    content = [{"type": "input_text", "text": "\n".join(lines)}]
+    # Build content blocks
+    content = [{"type": "text", "text": "\n".join(lines)}]
 
     # Add up to 4 photos for vision analysis
     if has_photos:
         for url in listing.photo_urls[:4]:
             content.append({
-                "type": "input_image",
-                "image_url": url,
-                "detail": "low",
+                "type": "image_url",
+                "image_url": {"url": url, "detail": "low"},
             })
 
     return content
@@ -165,9 +164,9 @@ def call_openai(listing: Listing) -> Dict[str, Any]:
     """Call OpenAI with structured output + optional vision."""
     content = _build_content(listing)
 
-    response = _get_client().responses.create(
+    response = _get_client().chat.completions.create(
         model=MODEL,
-        input=[
+        messages=[
             {
                 "role": "system",
                 "content": "You are a sharp real estate agent. Return ONLY valid JSON. No markdown.",
@@ -175,16 +174,16 @@ def call_openai(listing: Listing) -> Dict[str, Any]:
             {"role": "user", "content": content},
         ],
         temperature=0.3,
-        text={
-            "format": {
-                "type": "json_schema",
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
                 "name": "deal_analysis",
                 "strict": True,
                 "schema": DEAL_SCHEMA,
-            }
+            },
         },
     )
-    return json.loads(response.output_text)
+    return json.loads(response.choices[0].message.content)
 
 
 def _score_one(listing: Listing) -> Tuple[Listing, Dict[str, Any]]:
